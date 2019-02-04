@@ -1,0 +1,113 @@
+From 228dc9f41ec5384ec09522a5510b89abd5a69ccd Mon Sep 17 00:00:00 2001
+From: Wasim Nazir <wasim.nazir@pathpartnertech.com>
+Date: Sun, 27 Jan 2019 22:36:43 +0530
+Subject: [PATCH] Device-fsl: Sysfs_HAL
+
+
+diff --git a/imx6/your_board.mk b/imx6/your_board.mk
+index 66fb2d5..23b9f20 100644
+--- a/imx6/your_board.mk
++++ b/imx6/your_board.mk
+@@ -177,3 +177,9 @@ PRODUCT_COPY_FILES += \
+ 
+ # Busybox
+ PRODUCT_PACKAGES += busybox
++
++# Sysfs HAL_test
++PRODUCT_PACKAGES += \
++    android.hardware.ksysfs@2.0-impl \
++    android.hardware.ksysfs@2.0-service \
++    myksysfstest
+diff --git a/imx6/sepolicy/init.te b/imx6/sepolicy/init.te
+index 7c0aea2..74341b2 100644
+--- a/imx6/sepolicy/init.te
++++ b/imx6/sepolicy/init.te
+@@ -18,3 +18,5 @@ allow init proc:file { create };
+ allow init cgroup:file { create };
+ allow init sysfs:dir { write add_name };
+ allow init sysfs:file { create };
++allow init vendor_file:file { execute };
++allow init su:process { transition };
+diff --git a/your_board/Android.bp b/your_board/Android.bp
+index f31b444..6ec95d6 100644
+--- a/your_board/Android.bp
++++ b/your_board/Android.bp
+@@ -15,4 +15,5 @@
+ 
+ subdirs = [
+     "bluetooth",
++    "ksysfs_hal_test",
+ ]
+diff --git a/your_board/ksysfs_hal_test/Android.bp b/your_board/ksysfs_hal_test/Android.bp
+new file mode 100644
+index 0000000..6c6f603
+--- /dev/null
++++ b/your_board/ksysfs_hal_test/Android.bp
+@@ -0,0 +1,15 @@
++cc_binary {
++    name: "myksysfstest",
++    defaults: ["hidl_defaults"],
++    proprietary: true,
++    srcs: ["client.cpp"],
++
++    shared_libs: [
++        "android.hardware.ksysfs@2.0",
++        "android.hardware.ksysfs@2.0-impl",
++        "libhidlbase",
++        "libhidltransport",
++        "liblog",
++        "libutils",
++    ],
++}
+diff --git a/your_board/ksysfs_hal_test/client.cpp b/your_board/ksysfs_hal_test/client.cpp
+new file mode 100644
+index 0000000..547a590
+--- /dev/null
++++ b/your_board/ksysfs_hal_test/client.cpp
+@@ -0,0 +1,25 @@
++#define LOG_TAG "android.hardware.ksysfs@2.0-service"
++
++#include <android/hardware/ksysfs/2.0/IKsyshw.h>
++#include <hidl/Status.h>
++#include <hidl/LegacySupport.h>
++#include <utils/misc.h>
++#include <utils/Log.h>
++#include <hardware/hardware.h>
++#include <hidl/HidlSupport.h>
++
++#include<stdio.h>
++
++using android::hardware::ksysfs::V2_0::IKsyshw;
++using android::sp;
++
++int main() {
++      int res;
++      android::sp<IKsyshw> ser = IKsyshw::getService();
++
++      res = ser->ksysfn(80);
++
++      printf("val=%d\n",res);
++
++      return 0;
++}
+diff --git a/your_board/manifest.xml b/your_board/manifest.xml
+index 23fec81..d256e66 100644
+--- a/your_board/manifest.xml
++++ b/your_board/manifest.xml
+@@ -137,4 +137,13 @@
+             <instance>default</instance>
+         </interface>
+     </hal>
++    <hal format="hidl">
++        <name>android.hardware.ksysfs</name>
++        <transport>hwbinder</transport>
++        <version>2.0</version>
++        <interface>
++            <name>IKsyshw</name>
++            <instance>default</instance>
++        </interface>
++    </hal>
+ </manifest>
+-- 
+2.7.4
+

@@ -1,0 +1,15 @@
+cc_binary {
+    name: "myksysfstest",
+    defaults: ["hidl_defaults"],
+    proprietary: true,
+    srcs: ["client.cpp"],
+
+    shared_libs: [
+        "android.hardware.ksysfs@2.0",
+        "android.hardware.ksysfs@2.0-impl",
+        "libhidlbase",
+        "libhidltransport",
+        "liblog",
+        "libutils",
+    ],
+}

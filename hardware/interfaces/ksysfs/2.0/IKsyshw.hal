@@ -1,0 +1,5 @@
+package android.hardware.ksysfs@2.0;
+
+interface IKsyshw {
+    ksysfn(int32_t valueIn) generates (int32_t valueRet);
+};
